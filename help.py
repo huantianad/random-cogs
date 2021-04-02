@@ -23,7 +23,13 @@ class Help(commands.DefaultHelpCommand):
         await self.get_destination().send(embed=embed)
 
     async def send_cog_help(self, cog):
-        pass
+        embed = discord.Embed(title=f"{cog.qualified_name} Help", description=self.get_ending_note(), color=self.color)
+        if cog.get_commands():
+            commands_stuff = '\n'.join([x.name for x in cog.get_commands()])
+            embed.add_field(name=cog.qualified_name, value=commands_stuff)
+        else:
+            embed.add_field(name=cog.qualified_name, value="No commands!")
+        await self.get_destination().send(embed=embed)
 
     async def send_command_help(self, command):
         if command.help:
