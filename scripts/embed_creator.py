@@ -22,8 +22,6 @@ def create_embed(data):
     embed.add_field(name="Difficulty", value=data['difficulty'])
     embed.add_field(name="Download", value=f"[Link]({data['download_url']})", inline=True)
     embed.set_image(url=data['preview_img'])
-    embed.set_footer(text="Provided by the Barista",
-                     icon_url="https://cdn.discordapp.com/avatars/517141120837222410/6896d5205dd9d541902539d129efc6e5.webp")
 
     return embed
 

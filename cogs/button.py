@@ -16,21 +16,23 @@ class DataManager:
     def __enter__(self):
         if os.path.exists(self.PATH):
             with open(self.PATH, 'r+') as file:
-                self.data = defaultdict(int, json.load(file))
+                self.data = json.load(file)
         else:
-            # if the user data hasn't been created yet, return empty dict
-            self.data = defaultdict(int)
+            self.data = {}  # if the user data hasn't been created yet, return empty dict
 
         # JSON does weird things with int keys, so we store then as str, then convert them back here
-        self.data = {int(k): v for k, v in self.data.items()}
-        return self.data
+        self.data = defaultdict(int, {int(k): v for k, v in self.data.items()})
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # convert the int keys into strings for strage
+        # convert the int keys into strings for storage
         str_data = {str(k): v for k, v in self.data.items()}
 
         with open(self.PATH, 'w+') as file:
             json.dump(str_data, file, indent=4)
+
+    def set(self, value):
+        self.data = value
 
 
 def delta_to_string(delta):
@@ -98,12 +100,12 @@ class Button(commands.Cog):
         time_since_push = datetime.now() - self.last_pressed
         str_time = delta_to_string(time_since_push)
 
-        with DataManager() as users_data:
-            if time_since_push.seconds > users_data[ctx.author.id]:
-                users_data[ctx.author.id] = time_since_push.seconds
-                users_data = defaultdict(int, sorted(users_data.items(), key=lambda item: item[1], reverse=True))
+        with DataManager() as manager:
+            if time_since_push.seconds > manager.data[ctx.author.id]:
+                manager.data[ctx.author.id] = time_since_push.seconds
+                manager.set(defaultdict(int, sorted(manager.data.items(), key=lambda item: item[1], reverse=True)))
 
-            position = make_ordinal(list(users_data.keys()).index(ctx.author.id) + 1)
+            position = make_ordinal(list(manager.data.keys()).index(ctx.author.id) + 1)
 
         embed = discord.Embed(title="The Button:tm:", color=self.color,
                               description=f"It has been **{str_time}** since The Button:tm: was last pushed.\n"
@@ -116,8 +118,8 @@ class Button(commands.Cog):
 
     @button.command(aliases=['lb', 'top'])
     async def leaderboard(self, ctx):
-        with DataManager() as users_data:
-            users_data = users_data
+        with DataManager() as manager:
+            users_data = manager.data
 
         # convert the user ids into actual user objects
         converted_users = {ctx.guild.get_member(k): v for k, v in users_data.items()}
