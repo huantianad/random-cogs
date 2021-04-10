@@ -139,3 +139,5 @@ cython_debug/
 
 button_data.json
 config.ini
+.vscode/
+.idea
